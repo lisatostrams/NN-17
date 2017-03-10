@@ -85,7 +85,7 @@ def forwardprop(W_1, W_2, X):
     # First, compute the inputs of the second layer units (i.e. a_2). Write
     # your code below:
     # -------------------------------------------------------------------------
-    a_2 = np.dot(W_1.T, X)
+    a_2 = np.dot(W_1, X)
     # -------------------------------------------------------------------------
 
     # Once you have computed a_2, use it with the sigmoid function that you
@@ -100,7 +100,7 @@ def forwardprop(W_1, W_2, X):
     # code below:
     # -------------------------------------------------------------------------
 
-    a_3 = np.dot(W_2.T, f_a_2)
+    a_3 = np.dot(W_2, f_a_2)
     
     # -------------------------------------------------------------------------
 
@@ -143,8 +143,9 @@ def backprop(f_a_2, f_a_3, grad_f_a_2, grad_f_a_3, T, W_2, X):
     # -------------------------------------------------------------------------
     
 
-    delta_3 = error(f_a_3, T) * grad_f_a_3
-    delta_2 = delta_3 * grad_f_a_2
+    delta_3 = (f_a_3 - T) * grad_f_a_3
+                   
+    delta_2 = grad_f_a_2 *(np.dot(W_2.T, delta_3))
     
     # -------------------------------------------------------------------------
 
@@ -154,7 +155,63 @@ def backprop(f_a_2, f_a_3, grad_f_a_2, grad_f_a_3, T, W_2, X):
     # -------------------------------------------------------------------------
  
     # Add your solution here.
-
+    grad_E_w_2 = np.dot(delta_3, f_a_2.T)
+    
+    grad_E_w_1 = np.dot(delta_2, X.T)
     # -------------------------------------------------------------------------
     
     return grad_E_w_1, grad_E_w_2
+
+nepochs = 2000
+learning_rate = 0.001
+
+ninput = X_train.shape[0]
+noutput = T_train.shape[0]
+nhidden = 15
+
+# initialize weights
+r = np.sqrt(6)/np.sqrt(nhidden+ninput)
+W_1 = np.random.uniform(-r, r, [nhidden,ninput])
+
+r = np.sqrt(6)/np.sqrt(nhidden+ninput)
+W_2 = np.random.uniform(-r, r, [noutput,nhidden])
+
+# keep track of errors
+train_error = np.zeros([nepochs+1,1])
+test_error = np.zeros([nepochs+1,1])
+
+# training
+for epoch in xrange(0,nepochs):
+
+    # First, use the forward propagation function that you have implemented
+    # (i.e. forwardprop) to compute the outputs of the second and third layer
+    # units (i.e. f_a_2 and f_a_3) as well as their gradients (i.e. grad_f_a_2
+    # and grad_f_a_3). Write your code below:
+    # -------------------------------------------------------------------------
+    [f_a_2, f_a_3, grad_f_a_2, grad_f_a_3] = forwardprop(W_1, W_2, X_train)
+    # -------------------------------------------------------------------------
+
+    # compute error
+    train_error[epoch] = error(f_a_3, T_train)
+    test_error[epoch] = error(forwardprop(W_1, W_2, X_test)[1], T_test)
+
+    if (epoch + 1) % 100 == 0:
+         print('Iteration: ' + str(epoch+1) + ' / ' + str(nepochs) + '; Train error: ' 
+               + str(train_error[epoch])) + '; Test error: ' + str(test_error[epoch])
+ 
+    # Once you have computed f_a_2, f_a_3, grad_f_a_2 and grad_f_a_3, use them
+    # with the back propagation function that you have implemented (i.e.
+    # backprop) to compute the gradients of the error function (i.e. grad_E_w_1
+    # and grad_E_w_2). Write your code below:
+    # -------------------------------------------------------------------------
+    [grad_E_w_1, grad_E_w_2] = backprop(f_a_2, f_a_3, grad_f_a_2, grad_f_a_3, T_train, W_2, X_train)
+    # -------------------------------------------------------------------------
+             
+    W_1 = W_1 - learning_rate * grad_E_w_1                                 
+    W_2 = W_2 - learning_rate * grad_E_w_2                                                                            
+    
+# get error after the last update
+train_error[-1] = error(forwardprop(W_1, W_2, X_train)[1], T_train)
+test_error[-1] = error(forwardprop(W_1, W_2, X_test)[1], T_test)
+
+import matplotlib.pyplot as plt
