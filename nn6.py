@@ -39,7 +39,7 @@ def rbf_train(K, X, T):
 
     # select K datapoints at random
 
-    mu = random.sample(X.T, K)
+    mu = np.array(random.sample(X.T, K)).T
 
     # compute global distance parameter
     
@@ -47,6 +47,60 @@ def rbf_train(K, X, T):
     sigma = d_max/(np.sqrt(2*K))
         
     # compute w
-    
-    
+    hidden = np.zeros([N,K])
+    for n in range(N):
+        for k in range(K):
+            hidden[0,k] = np.exp(-(1/(2*sigma**2))*norm(X[:,n]-mu[:,k])**2);
+
+    w = np.dot(pinv(hidden), T)    
     return [mu, sigma, w]
+
+from numpy.linalg import norm
+
+def rbf_test(X, mu, sigma, w):
+    # input:
+    # M x N samples X
+    # M x K prototype vectors mu
+    # 1 x 1 scalar Gaussian with sigma
+    # K x 1 output weights w
+    #
+    # output:
+    # output activations aO and hidden activations aH for an RBF network
+
+    N = X.shape[1]
+    K = mu.shape[1]
+
+    aH = np.zeros([K,N])
+    aO = np.zeros([1,N])
+
+    for n in range(N):
+
+        hidden = np.zeros([1,K])
+        for k in range(K):
+            hidden[0,k] = np.exp(-(1/(2*sigma**2))*norm(X[:,n]-mu[:,k])**2);
+
+        output = np.dot(hidden,w)
+
+        aH[:,n] = hidden
+        aO[0,n] = output
+
+    return [aO, aH]
+
+#%matplotlib inline
+import matplotlib.pyplot as plt
+from mpl_toolkits.mplot3d import Axes3D
+
+# run RBF training with 50 kernels
+[mu,sigma,w] = rbf_train(50, X_train, T_train)
+
+# predict outputs using RBF network
+[Y_test,_] = rbf_test(X_test,mu,sigma,w)
+
+# plot the outputs
+fig = plt.figure()
+ax = fig.add_subplot(121, projection='3d')
+ax.plot_wireframe(X_test[0,:],X_test[1,:],T_test)
+plt.title('ground truth');
+ax = fig.add_subplot(122, projection='3d')
+ax.plot_wireframe(X_test[0,:],X_test[1,:],Y_test)
+plt.title('estimate');
