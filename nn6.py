@@ -104,3 +104,6 @@ plt.title('ground truth');
 ax = fig.add_subplot(122, projection='3d')
 ax.plot_wireframe(X_test[0,:],X_test[1,:],Y_test)
 plt.title('estimate');
+         
+SE = (Y_test - T_test)**2          
+    
