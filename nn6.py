@@ -105,5 +105,14 @@ ax = fig.add_subplot(122, projection='3d')
 ax.plot_wireframe(X_test[0,:],X_test[1,:],Y_test)
 plt.title('estimate');
          
-SE = (Y_test - T_test)**2          
-    
+MSE_vector = []
+for k in range(2, 30): 
+        
+    # run RBF training with 50 kernels
+    [mu,sigma,w] = rbf_train(k, X_train, T_train)
+
+    # predict outputs using RBF network
+    [Y_test,_] = rbf_test(X_test,mu,sigma,w)
+
+    MSE = np.mean((Y_test - T_test)**2)
+    MSE_vector.append(MSE)
