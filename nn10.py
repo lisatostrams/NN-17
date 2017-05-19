@@ -12,20 +12,6 @@ X = mat['digits'].astype('float32')
 
 import numpy as np
 
-def gibbs(x, W, b, ngibbs=20, temp=1.0):
-
-    M = x.size # number of variables
-    
-    # perform Gibbs sampling
-    XM = np.zeros([ngibbs,M])
-    XM[0] = x
-    for t in range(1,ngibbs):
-        for i in range(M):
-            pi = sigmoid((np.dot(W[i,:],x) + b[i])/temp)
-            x[i] = np.random.rand() < pi
-        XM[t,:] = x
-    
-    return XM
 
 def sigmoid(x):
     return 1.0 / (1.0 + np.exp(-x))
@@ -48,9 +34,36 @@ def RBM_train(X,N=10,T=10):
         for i in prm:
             
             # Implementation of the CD-1 algorithm
-            gibbs(X, W, b)
+            ph0 = sigmoid(c + np.dot(W, X[:,i]))
+            h_0 = []
+            for p in ph0:
+                h_0.append(np.random.rand() < p)
+                
+            pv1 = sigmoid(b + np.dot(h_0, W))
+            
+            v_1 = []
+            for p in pv1:
+                v_1.append(np.random.rand() < p)
+                
+            ph1 = sigmoid(c + np.dot(W, v_1))
+            
+            deltaW = np.outer(ph0, X[:,1]) - np.outer(ph1,v_1)  
+            
+            deltab = X[:,i] - v_1
+            
+            deltac = ph0 - ph1
+            
+            W += deltaW
+            b += deltab
+            c += deltac
+             
             
 
     return W,b,c
 
 W, b, c = RBM_train(X)
+import matplotlib.pyplot as plt
+
+for i in range(10):
+    plt.imshow(np.reshape(W[i], [28,28]))
+
