@@ -29,41 +29,60 @@ def RBM_train(X,N=10,T=10):
     
     # iterate over examples (iterating over minibatches would be more elegant!)
     for idx in range(T):
-
+        print(idx)
         prm = np.random.permutation(X.shape[1])
         for i in prm:
             
             # Implementation of the CD-1 algorithm
             ph0 = sigmoid(c + np.dot(W, X[:,i]))
-            h_0 = []
-            for p in ph0:
-                h_0.append(np.random.rand() < p)
+            h_0 = [np.random.rand() < p for p in ph0]
                 
             pv1 = sigmoid(b + np.dot(h_0, W))
             
-            v_1 = []
-            for p in pv1:
-                v_1.append(np.random.rand() < p)
+            v_1 = [np.random.rand() < p for p in pv1]
                 
             ph1 = sigmoid(c + np.dot(W, v_1))
             
-            deltaW = np.outer(ph0, X[:,1]) - np.outer(ph1,v_1)  
+            deltaW = np.outer(ph0, X[:,i]) - np.outer(ph1,v_1)  
             
             deltab = X[:,i] - v_1
             
             deltac = ph0 - ph1
             
-            W += deltaW
-            b += deltab
-            c += deltac
-             
+            W += 0.01*deltaW
+            b += 0.01*deltab
+            c += 0.01*deltac
             
 
     return W,b,c
-
-W, b, c = RBM_train(X)
+#W, b, c = RBM_train(X)
 import matplotlib.pyplot as plt
 
 for i in range(10):
-    plt.imshow(np.reshape(W[i], [28,28]))
+    plt.imshow(np.reshape(W[i], [28,28]), cmap = 'gray')
+    plt.show()
 
+def RBM_test(W, b, c, T):
+    v_k = []
+    h_k = [np.random.randint(0,2) for i in range(0,10)] 
+    
+    for idx in range(T):
+            
+        # Implementation of the CD-K  algorithm
+    
+        pvk = sigmoid(b + np.dot(h_k, W))
+        v_k = [np.random.rand() < p for p in pvk]
+                
+        
+        phk = sigmoid(c + np.dot(W, v_k))
+        h_k = [np.random.rand() < p for p in phk]
+            
+
+        
+        
+    return v_k
+            
+for i in range(10):
+    fantasy = RBM_test(W, b, c, 100)
+    plt.imshow(np.reshape(fantasy, [28,28]), cmap = 'gray')
+    plt.show()
