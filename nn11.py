@@ -31,7 +31,7 @@ class MLP(Chain):
      def __init__(self, n_units, n_out):
          super(MLP, self).__init__(
              # the size of the inputs to each layer will be inferred
-             l1=L.Convolution2D(1, n_units, ksize=1, stride=3, pad=0),  # n_in -> n_units
+             l1=L.Convolution2D(None, n_units, ksize=8, stride=3, pad=0),  # n_in -> n_units
              l2=L.Linear(None, n_units),  # n_units -> n_units
              l3=L.Linear(None, n_out),    # n_units -> n_out
          )
@@ -42,7 +42,7 @@ class MLP(Chain):
          y = self.l3(h2)
          return y
      
-model = L.Classifier(MLP(50, 5))  # the input size, 784, is inferred
+model = L.Classifier(MLP(50,10))  # the input size, 784, is inferred
 optimizer = optimizers.SGD()
 optimizer.setup(model)
 

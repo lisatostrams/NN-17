@@ -37,7 +37,6 @@ class RNNForLM(chainer.Chain):
 
     def __call__(self, x):
         h0 = self.embed(x)
-        print(h0.size)
         h1 = self.l1(F.dropout(h0, train=self.train))
         h2 = self.l2(F.dropout(h1, train=self.train))
         y = self.l3(F.dropout(h2, train=self.train))
@@ -141,22 +140,22 @@ class BPTTUpdater(training.StandardUpdater):
         loss.unchain_backward()  # Truncate the graph
         optimizer.update()  # Update the parameters
         
-# Load the Penn Tree Bank long word sequence dataset
-train, val, test = chainer.datasets.get_ptb_words()
-n_vocab = max(train) + 1  # train is just an array of integers
-
-# Reduce to first 1000 words to speed up
-train = train[:1000]
-val = val[:1000]
-test = test[:1000]
-
-# Routine to rewrite the result dictionary of LogReport to add perplexity values
-def compute_perplexity(result):
-    result['perplexity'] = np.exp(result['main/loss'])
-    if 'validation/main/loss' in result:
-        result['val_perplexity'] = np.exp(result['validation/main/loss'])
-        
-# Define iterators
+## Load the Penn Tree Bank long word sequence dataset
+#train, val, test = chainer.datasets.get_ptb_words()
+#n_vocab = max(train) + 1  # train is just an array of integers
+#
+## Reduce to first 1000 words to speed up
+#train = train[:1000]
+#val = val[:1000]
+#test = test[:1000]
+#
+## Routine to rewrite the result dictionary of LogReport to add perplexity values
+#def compute_perplexity(result):
+#    result['perplexity'] = np.exp(result['main/loss'])
+#    if 'validation/main/loss' in result:
+#        result['val_perplexity'] = np.exp(result['validation/main/loss'])
+#        
+## Define iterators
 #train_iter = ParallelSequentialIterator(train, batch_size=100)
 #val_iter = ParallelSequentialIterator(val, 1, repeat=False)
 #test_iter = ParallelSequentialIterator(test, 1, repeat=False)
@@ -199,19 +198,50 @@ def compute_perplexity(result):
 #idx_to_word = {}
 #for k in word_to_idx.keys():
 #    idx_to_word[word_to_idx[k]] = k
-#
+
 
 pred = model.predictor
 pred.train = False
 
 random_words = []
 
-prediction = F.softmax(pred(train[:100]).data).data #cant use all training data?
+prediction = F.softmax(pred(train[[np.random.randint(0,1000)]]).data).data 
 #how to use predictor?
-sample = np.random.multinomial(1, prediction[0,:], size=30)
+sample = np.random.multinomial(1, prediction[0,:], size=1)
 #sample from one row of predictor output?
 for i in range(30):
     idx = list(sample[i,:] == 1).index(True)
-    random_words.append(idx_to_word[idx])
+    gen_word = idx_to_word[idx]
+    random_words.append(gen_word)
+    
+    prediction = F.softmax(pred(np.array([word_to_idx[gen_word])).data 
+
+    sample = np.random.multinomial(1, prediction[0,:], size=1)
 
 print(' '.join(random_words))
+
+#words = np.unique(train)
+#ann = model.predictor
+#
+#X = ann.embed(np.array(words,dtype='int32')).data
+#from sklearn.decomposition import PCA
+#pca = PCA(n_components=2)
+#new_X = pca.fit_transform(X)
+#
+#import matplotlib.pyplot as plt
+#plt.plot(new_X[:,0],new_X[:,1], 'b.')
+#
+#plt.plot(new_X[word_to_idx['smokers']][0], new_X[word_to_idx['smokers']][1], 'o', color ='k')
+#plt.annotate('smokers', new_X[word_to_idx['smokers']])
+#
+#plt.plot(new_X[word_to_idx['cancer']][0], new_X[word_to_idx['cancer']][1], 'o', color ='k')
+#plt.annotate('cancer', new_X[word_to_idx['cancer']])
+#
+#plt.plot(new_X[word_to_idx['portfolio']][0], new_X[word_to_idx['portfolio']][1], 'o', color ='k')
+#plt.annotate('portfolio', new_X[word_to_idx['portfolio']])
+#
+#plt.plot(new_X[word_to_idx['market']][0], new_X[word_to_idx['market']][1], 'o', color ='k')
+#plt.annotate('market', new_X[word_to_idx['market']])
+#
+#plt.title('Word representations projected onto first two principal components')
+#plt.show()
