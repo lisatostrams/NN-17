@@ -15,8 +15,7 @@ import chainer.links as L
 from chainer.training import extensions
 
 train, test = datasets.get_mnist()
-train_iter = iterators.SerialIterator(train, batch_size=100, shuffle=True)
-test_iter = iterators.SerialIterator(test, batch_size=100, repeat=False, shuffle=False)
+
 Xtrain = train._datasets[0].reshape([train._datasets[0].shape[0],1,28,28])
 ytrain = train._datasets[1]
 Xtest = test._datasets[0].reshape([test._datasets[0].shape[0],1,28,28])
@@ -25,11 +24,14 @@ ytest = test._datasets[1]
 train = datasets.TupleDataset(Xtrain,ytrain)
 test = datasets.TupleDataset(Xtest,ytest)
 
+train_iter = iterators.SerialIterator(train, batch_size=100, shuffle=True)
+test_iter = iterators.SerialIterator(test, batch_size=100, repeat=False, shuffle=False)
+
 class MLP(Chain):
      def __init__(self, n_units, n_out):
          super(MLP, self).__init__(
              # the size of the inputs to each layer will be inferred
-             l1=L.Convolution2D(None, n_units, ksize=1, stride=3, pad=0),  # n_in -> n_units
+             l1=L.Convolution2D(1, n_units, ksize=1, stride=3, pad=0),  # n_in -> n_units
              l2=L.Linear(None, n_units),  # n_units -> n_units
              l3=L.Linear(None, n_out),    # n_units -> n_out
          )
@@ -51,6 +53,7 @@ trainer.extend(extensions.Evaluator(test_iter, model))
 trainer.extend(extensions.LogReport())
 trainer.extend(extensions.PrintReport(['epoch', 'main/accuracy', 'validation/main/accuracy']))
 trainer.extend(extensions.ProgressBar())
+print('Training')
 trainer.run()  
 
 

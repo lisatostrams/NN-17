@@ -203,5 +203,15 @@ def compute_perplexity(result):
 
 pred = model.predictor
 pred.train = False
-for t in train[:10]:
-    prediction = pred(t)
+
+random_words = []
+
+prediction = F.softmax(pred(train[:100]).data).data #cant use all training data?
+#how to use predictor?
+sample = np.random.multinomial(1, prediction[0,:], size=30)
+#sample from one row of predictor output?
+for i in range(30):
+    idx = list(sample[i,:] == 1).index(True)
+    random_words.append(idx_to_word[idx])
+
+print(' '.join(random_words))
